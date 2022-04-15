@@ -14,18 +14,20 @@ class InterfazGrafica:
     puerto_escucha = 0
     puerto_envio = 0
     reloj_logico = 0
-    estado = 'sin accion'
+    estado = []
     cola_zona_1 = []
     cola_zona_2 = []
-    lista_oks = []
+    numero_oks_zona1 = 0
+    numero_oks_zona2 = 0
     sock = NULL
     solicita_zona  = 'Solicita Zona Crítica 1'
     solicita_zona2 = 'Solicita Zona Crítica 2'
-    sin_accion = 'Sin Acción'
-    en_zona1 = 'En Zona Crítica 1'
+    en_zona = 'En Zona Crítica 1'
     en_zona2 = 'En Zona Crítica 2'
-    def __init__(self, master, puerto_escucha,puerto_envio, mi_id ):
+    sin_accion = 'Sin Acción'
 
+    def __init__(self, master, puerto_escucha,puerto_envio, mi_id ):
+        self.estado = [self.sin_accion,self.sin_accion]
 
         self.puerto_escucha = puerto_escucha
         self.puerto_envio = puerto_envio
@@ -56,7 +58,8 @@ class InterfazGrafica:
         self.etiqueta = Label(master, text="Estado:")
         self.etiqueta.configure(font=textoBold)
         self.etiqueta.pack(padx=60,pady=10)
-        self.lblEstado = Label(master, text=self.sin_accion)
+        self.lblEstado = Label(master, text='')
+        self.lblEstado.config(text=f'{self.estado[0]},{self.estado[1]}')
         self.lblEstado.configure(font=texto)
         self.lblEstado.pack(padx=60,pady=10)
         self.cola1 = Label(master, text="Cola Zona Crítica 1[]")
@@ -65,45 +68,90 @@ class InterfazGrafica:
         self.cola2 = Label(master, text="Cola Zona Crítica 2[]")
         self.cola2.configure(font=texto)
         self.cola2.pack(padx=20,pady=10)
-        self.lista_ok = Label(master, text="lista ok's[]")
-        self.lista_ok.configure(font=texto)
+
+        self.lista_ok = Label(master, text="lista ok'")
+        self.lista_ok.configure(font=textoBold)
         self.lista_ok.pack(padx=20,pady=10)
 
-        self.botonZonaCritica = Button(master, text="→ Solicitar Zona crítica 1", command=self.solicitar_zona_1)
+        self.lista_ok1 = Label(master, text=self.numero_oks_zona1)
+        self.lista_ok1.configure(font=texto)
+        self.lista_ok1.pack(padx=60,pady=10)
+        self.lista_ok2 = Label(master, text=self.numero_oks_zona2)
+        self.lista_ok2.configure(font=texto)
+        self.lista_ok2.pack(padx=60,pady=10)
+
+        self.botonZonaCritica = Button(master, text="→ Solicitar Zona crítica 1", command=self.solicitar_zona1)
         self.botonZonaCritica.configure(font=boton)
         self.botonZonaCritica.pack(padx=20,pady=10)
-        self.botonZonaCritica2 = Button(master, text="→ Solicitar Zona crítica 2", command=self.solicitar_zona_2)
+        self.botonZonaCritica2 = Button(master, text="→ Solicitar Zona crítica 2", command=self.solicitar_zona2)
         self.botonZonaCritica2.configure(font=boton)
         self.botonZonaCritica2.pack(padx=20,pady=10)
-        self.SalirSonaCritica = Button(master, text="← Salir de a Zona crítica", command=self.enviar_todos)
+        self.SalirSonaCritica = Button(master, text="← Salir de a Zona crítica", command=self.salir_de_zona_actual)
         self.SalirSonaCritica.configure(font=boton)
         self.SalirSonaCritica.pack(padx=20,pady=10) 
-
-    def solicitar_zona_1(self):
-        if self.estado == self.solicita_zona or self.estado == self.en_zona1:
-            return
-        self.estado = self.solicita_zona
-        self.lblEstado.config(text=self.estado)
-        msg =f'{str(self.mi_id)},{self.solicita_zona},{self.reloj_logico},{1}'
-        for i in self.NODOS_ENVIO:
-            self.sock.sendto(msg.encode(), ('127.0.0.1', i))
+        self.SalirSonaCritica2 = Button(master, text="← Salir de a Zona crítica 2", command=self.salir_de_zona_actual)
+        self.SalirSonaCritica2.configure(font=boton)
+        self.SalirSonaCritica2.pack(padx=20,pady=10) 
     
-    def solicitar_zona_2(self):
-        if self.estado == self.solicita_zona2 or self.estado == self.en_zona2:
-            return
-        self.estado = self.solicita_zona2
-        self.lblEstado.config(text=self.estado)
-        msg =f'{str(self.mi_id)},{self.solicita_zona2},{self.reloj_logico},{2}'
+    def solicitar_zona1(self):
+        if self.estado[0] == self.solicita_zona or self.estado[0] == self.en_zona:
+                return
+        self.estado[0] = self.solicita_zona
+        self.lblEstado.config(text=f'{self.estado[0]},{self.estado[1]}')
+        msg =f'{str(self.mi_id)},{self.solicita_zona},{self.reloj_logico},1'
+        self.enviar_mensaje_a_todos(msg)
+        self.reloj_logico += 1
+
+    def solicitar_zona2(self):
+        if self.estado[1] == self.solicita_zona or self.estado[1] == self.en_zona:
+                return
+        self.estado[1] = self.solicita_zona
+        self.lblEstado.config(text=f'{self.estado[0]},{self.estado[1]}')
+        msg =f'{str(self.mi_id)},{self.solicita_zona},{self.reloj_logico},2'
+        self.enviar_mensaje_a_todos(msg)
+        self.reloj_logico += 1
+        
+    
+    def enviar_mensaje_a_todos(self, msg):
         for i in self.NODOS_ENVIO:
             self.sock.sendto(msg.encode(), ('127.0.0.1', i))
 
-    def responderMensajeOk(self,id_proceso, accion):
-        if self.estado != self.solicita_zona and self.estado != self.en_zona:
-            msg =f'{str(self.mi_id)},{self.solicita_zona},ok'
-            self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[id_proceso]))
+    
+    def salir_de_zona_actual():
+        pass
+   
+    def responderMensajeOk(self,id_proceso, m_zona_pedida, reloj_logico):
+        print(id_proceso,m_zona_pedida,reloj_logico)
+        if m_zona_pedida == 1:
+            if self.estado[0] == self.en_zona:
+                #encola
+                return
+            if self.estado[0] == self.sin_accion:
+                msg =f'{str(self.mi_id)},ok, {m_zona_pedida}'
+                self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(id_proceso)]))
+                return
 
-    def saludar(self):
-        print("¡Hey!")
+            if self.reloj_logico > reloj_logico:
+                msg =f'{str(self.mi_id)},ok, {m_zona_pedida}'
+                self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(id_proceso)]))
+                return
+            
+            #encola
+        if m_zona_pedida == 2:
+            if self.estado[1] == self.en_zona:
+                #encola
+                return
+            if self.estado[1] == self.sin_accion:
+                msg =f'{str(self.mi_id)},ok, {m_zona_pedida}'
+                self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(id_proceso)]))
+                return
+
+            if self.reloj_logico > reloj_logico:
+                msg =f'{str(self.mi_id)},ok, {m_zona_pedida}'
+                self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(id_proceso)]))
+                return
+            
+            #encola
 
     def listen(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -115,9 +163,22 @@ class InterfazGrafica:
             msg_rep = data.decode()
             msg_array = msg_rep.split(',')
             if msg_array[1] == self.solicita_zona:
-                id_prceso_remitente = msg_array[0]
+                m_id_prceso_remitente = msg_array[0]
+                m_reloj_logico = msg_array[2]
+                m_zona_pedida = msg_array[3]
+                self.responderMensajeOk(m_id_prceso_remitente, m_zona_pedida, m_reloj_logico)
+            if msg_array[1] == 'ok':
+                if msg_array[2] == '1':
+                    self.numero_oks_zona1 += 1
+                    if self.numero_oks_zona1 >= 6:
+                        self.estado[0] = self.en_zona
+                else:
+                    self.numero_oks_zona2 += 1
+                    if self.numero_oks_zona2 >= 6:
+                            self.estado[1] = self.en_zona2
 
-                self.responderMensajeOk(id_prceso_remitente)
+            self.lblEstado.config(text=f'{self.estado[0]},{self.estado[1]}')
+            self.marcaTiempo.config(text=f'Reloj lógico: {self.reloj_logico}')
 
             
 
