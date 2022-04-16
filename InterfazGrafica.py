@@ -1,4 +1,5 @@
 from asyncio.windows_events import NULL
+import re
 from tkinter import Tk, Label, Button
 import tkinter.font as tkFont
 import socket
@@ -26,7 +27,8 @@ class InterfazGrafica:
     en_zona2 = 'En Zona Crítica 2'
     sin_accion = 'Sin Acción'
 
-    def __init__(self, master, puerto_escucha,puerto_envio, mi_id ):
+    def __init__(self, master, puerto_escucha,puerto_envio, mi_id, reloj_inicial ):
+        self.reloj_logico = reloj_inicial
         self.estado = [self.sin_accion,self.sin_accion]
 
         self.puerto_escucha = puerto_escucha

@@ -9,7 +9,7 @@ from InterfazGrafica import InterfazGrafica
 
 
 root = Tk()
-InterfazGrafica(root, 50001, 50011, 1)
+InterfazGrafica(root, 50001, 50011, 1, 5)
 root.mainloop()
 
 
