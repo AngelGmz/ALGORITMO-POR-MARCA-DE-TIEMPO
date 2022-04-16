@@ -99,17 +99,17 @@ class InterfazGrafica:
         self.estado[0] = self.solicita_zona
         self.lblEstado.config(text=f'{self.estado[0]},{self.estado[1]}')
         msg =f'{str(self.mi_id)},{self.solicita_zona},{self.reloj_logico},1'
-        self.enviar_mensaje_a_todos(msg)
         self.reloj_logico += 1
+        self.enviar_mensaje_a_todos(msg)
 
     def solicitar_zona2(self):
         if self.estado[1] == self.solicita_zona or self.estado[1] == self.en_zona:
                 return
-        self.estado[1] = self.solicita_zona
+        self.estado[1] = self.solicita_zona2
         self.lblEstado.config(text=f'{self.estado[0]},{self.estado[1]}')
         msg =f'{str(self.mi_id)},{self.solicita_zona},{self.reloj_logico},2'
-        self.enviar_mensaje_a_todos(msg)
         self.reloj_logico += 1
+        self.enviar_mensaje_a_todos(msg)
         
     
     def enviar_mensaje_a_todos(self, msg):
@@ -122,8 +122,10 @@ class InterfazGrafica:
    
     def responderMensajeOk(self,id_proceso, m_zona_pedida, reloj_logico):
         print(id_proceso,m_zona_pedida,reloj_logico)
-        if m_zona_pedida == 1:
+        if m_zona_pedida == '1':
             if self.estado[0] == self.en_zona:
+                print('estoy en zona')
+                print('encola')
                 #encola
                 return
             if self.estado[0] == self.sin_accion:
@@ -131,28 +133,34 @@ class InterfazGrafica:
                 self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(id_proceso)]))
                 return
 
-            if self.reloj_logico > reloj_logico:
+            if  int(self.reloj_logico) > int(reloj_logico):
                 msg =f'{str(self.mi_id)},ok, {m_zona_pedida}'
                 self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(id_proceso)]))
                 return
             
-            #encola
-        if m_zona_pedida == 2:
+            print('encola')
+        if m_zona_pedida == '2':
             if self.estado[1] == self.en_zona:
-                #encola
+                print('encola')
                 return
             if self.estado[1] == self.sin_accion:
                 msg =f'{str(self.mi_id)},ok, {m_zona_pedida}'
                 self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(id_proceso)]))
                 return
 
-            if self.reloj_logico > reloj_logico:
+            if  int(self.reloj_logico) > int(reloj_logico):
                 msg =f'{str(self.mi_id)},ok, {m_zona_pedida}'
                 self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(id_proceso)]))
                 return
             
-            #encola
+            print('encola')
 
+    def actualziar_interfaz(self):
+        self.lblEstado.config(text=f'{self.estado[0]},{self.estado[1]}')
+        self.marcaTiempo.config(text=f'Reloj lógico: {self.reloj_logico}')
+        self.lista_ok1.config(text=f'ok zona 1: {self.numero_oks_zona1}')
+        self.lista_ok2.config(text=f'ok zona 2: {self.numero_oks_zona2}')
+    
     def listen(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind(('127.0.0.1', self.puerto_escucha))
@@ -167,18 +175,22 @@ class InterfazGrafica:
                 m_reloj_logico = msg_array[2]
                 m_zona_pedida = msg_array[3]
                 self.responderMensajeOk(m_id_prceso_remitente, m_zona_pedida, m_reloj_logico)
+            
             if msg_array[1] == 'ok':
-                if msg_array[2] == '1':
+                print(msg_array[2])
+                if int(msg_array[2]) == 1:
+                    print(msg_array[2])
                     self.numero_oks_zona1 += 1
                     if self.numero_oks_zona1 >= 6:
                         self.estado[0] = self.en_zona
                 else:
+                    #print(msg_array[2],'en zona 2')
                     self.numero_oks_zona2 += 1
                     if self.numero_oks_zona2 >= 6:
                             self.estado[1] = self.en_zona2
+            self.actualziar_interfaz()
 
-            self.lblEstado.config(text=f'{self.estado[0]},{self.estado[1]}')
-            self.marcaTiempo.config(text=f'Reloj lógico: {self.reloj_logico}')
+
 
             
 
