@@ -119,16 +119,20 @@ class InterfazGrafica:
             self.sock.sendto(msg.encode(), ('127.0.0.1', i))
 
     
-    def salir_de_zona_actual():
-        pass
-   
+    def salir_de_zona_actual(self, id_proceso):
+        if self.estado[0] == self.en_zona or self.estado[1] == self.en_zona:
+            
+
+        
     def responderMensajeOk(self,id_proceso, m_zona_pedida, reloj_logico):
-        print(id_proceso,m_zona_pedida,reloj_logico)
+       # print(id_proceso,m_zona_pedida,reloj_logico)
         if m_zona_pedida == '1':
             if self.estado[0] == self.en_zona:
                 print('estoy en zona')
                 print('encola')
-                #encola
+                self.cola_zona_1.append(int(id_proceso)+ 1 )
+                self.actualziar_interfaz()
+
                 return
             if self.estado[0] == self.sin_accion:
                 msg =f'{str(self.mi_id)},ok, {m_zona_pedida}'
@@ -139,14 +143,15 @@ class InterfazGrafica:
                 msg =f'{str(self.mi_id)},ok, {m_zona_pedida}'
                 self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(id_proceso)]))
                 return
-            
             print('encola')
-
-        #msg =f'{str(self.mi_id)},{self.solicita_zona},{self.reloj_logico},2'
-
+            self.cola_zona_1.append(int(id_proceso) + 1 )
+            self.actualziar_interfaz()
+  
         if m_zona_pedida == '2':
             if self.estado[1] == self.en_zona:
                 print('encola')
+                self.cola_zona_2.append(int(id_proceso)+ 1 )
+                self.actualziar_interfaz()
                 return
             if self.estado[1] == self.sin_accion:
                 msg =f'{str(self.mi_id)},ok, {m_zona_pedida}'
@@ -156,15 +161,20 @@ class InterfazGrafica:
             if  int(self.reloj_logico) > int(reloj_logico):
                 msg =f'{str(self.mi_id)},ok, {m_zona_pedida}'
                 self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(id_proceso)]))
+                
                 return
             
             print('encola')
+            self.cola_zona_2.append(int(id_proceso)+ 1 )
+            self.actualziar_interfaz()
 
     def actualziar_interfaz(self):
         self.lblEstado.config(text=f'{self.estado[0]},{self.estado[1]}')
         self.marcaTiempo.config(text=f'Reloj lógico: {self.reloj_logico}')
         self.lista_ok1.config(text=f'ok zona 1: {self.numero_oks_zona1}')
         self.lista_ok2.config(text=f'ok zona 2: {self.numero_oks_zona2}')
+        self.cola1.config(text = f'Lista de cola 1: {self.cola_zona_1}')
+        self.cola2.config(text = f'Lista de cola 2: {self.cola_zona_2}')
     
     def listen(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
