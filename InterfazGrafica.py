@@ -101,6 +101,7 @@ class InterfazGrafica:
         self.estado[0] = self.solicita_zona
         self.lblEstado.config(text=f'{self.estado[0]},{self.estado[1]}')
         msg =f'{str(self.mi_id)},{self.solicita_zona},1,{self.reloj_logico}'
+        self.reloj_logico += 1
         self.enviar_mensaje_a_todos(msg)
         self.actualziar_interfaz()
         
@@ -111,13 +112,14 @@ class InterfazGrafica:
         self.estado[1] = self.solicita_zona2
         self.lblEstado.config(text=f'{self.estado[0]},{self.estado[1]}')
         msg =f'{str(self.mi_id)},{self.solicita_zona},2,{self.reloj_logico}'
+        self.reloj_logico += 1
         self.enviar_mensaje_a_todos(msg)
         self.actualziar_interfaz()
         
     
     def enviar_mensaje_a_todos(self, msg):
         for i in self.NODOS_ENVIO:
-            self.reloj_logico += 1
+            #self.reloj_logico += 1
             self.sock.sendto(msg.encode(), ('127.0.0.1', i))
 
     
@@ -125,8 +127,9 @@ class InterfazGrafica:
         if self.estado[0] == self.en_zona:
             print('saliendo de zona crítica')
             self.estado[0] = self.sin_accion
+            self.reloj_logico +=1
             for p in self.cola_zona_1:
-                self.reloj_logico +=1
+                #self.reloj_logico +=1
                 msg =f'{str(self.mi_id)},ok, 1, {self.reloj_logico}'
                 self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(p)-1]))
             self.cola_zona_1 = []
@@ -135,8 +138,9 @@ class InterfazGrafica:
     def salir_de_zona2(self):
         if self.estado[1] == self.en_zona2:
             self.estado[1] = self.sin_accion
+            self.reloj_logico +=1
             for p in self.cola_zona_2:
-                self.reloj_logico +=1
+                #self.reloj_logico +=1
                 msg =f'{str(self.mi_id)},ok, 2, {self.reloj_logico}'
                 self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(p)-1]))
             self.cola_zona_2 = []
