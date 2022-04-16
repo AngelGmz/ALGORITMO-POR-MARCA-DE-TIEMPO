@@ -53,7 +53,7 @@ class InterfazGrafica:
         self.etiquetaProceso.configure(font=titulo)
         self.etiquetaProceso.pack(padx=60,pady=10)
         
-        self.marcaTiempo = Label(master, text="Reloj Lógico: 0")
+        self.marcaTiempo = Label(master,  text='Proceso {}'.format(self.reloj_logico))
         self.marcaTiempo.configure(font=texto)
         self.marcaTiempo.pack(padx=60,pady=10)
         
@@ -88,10 +88,10 @@ class InterfazGrafica:
         self.botonZonaCritica2 = Button(master, text="→ Solicitar Zona crítica 2", command=self.solicitar_zona2)
         self.botonZonaCritica2.configure(font=boton)
         self.botonZonaCritica2.pack(padx=20,pady=10)
-        self.SalirSonaCritica = Button(master, text="← Salir de a Zona crítica 1", command=self.salir_de_zona_actual)
+        self.SalirSonaCritica = Button(master, text="← Salir de a Zona crítica 1", command=self.salir_de_zona1)
         self.SalirSonaCritica.configure(font=boton)
         self.SalirSonaCritica.pack(padx=20,pady=10) 
-        self.SalirSonaCritica2 = Button(master, text="← Salir de a Zona crítica 2", command=self.salir_de_zona_actual)
+        self.SalirSonaCritica2 = Button(master, text="← Salir de a Zona crítica 2", command=self.salir_de_zona2)
         self.SalirSonaCritica2.configure(font=boton)
         self.SalirSonaCritica2.pack(padx=20,pady=10) 
     
@@ -103,6 +103,8 @@ class InterfazGrafica:
         msg =f'{str(self.mi_id)},{self.solicita_zona},{self.reloj_logico},1'
         self.reloj_logico += 1
         self.enviar_mensaje_a_todos(msg)
+        self.actualziar_interfaz()
+        
 
     def solicitar_zona2(self):
         if self.estado[1] == self.solicita_zona2 or self.estado[1] == self.en_zona2:
@@ -112,6 +114,7 @@ class InterfazGrafica:
         msg =f'{str(self.mi_id)},{self.solicita_zona},{self.reloj_logico},2'
         self.reloj_logico += 1
         self.enviar_mensaje_a_todos(msg)
+        self.actualziar_interfaz()
         
     
     def enviar_mensaje_a_todos(self, msg):
@@ -119,9 +122,29 @@ class InterfazGrafica:
             self.sock.sendto(msg.encode(), ('127.0.0.1', i))
 
     
-    def salir_de_zona_actual(self, id_proceso):
-        if self.estado[0] == self.en_zona or self.estado[1] == self.en_zona:
-            
+    def salir_de_zona1(self):
+        print('saliendo de zona crítica')
+
+        if self.estado[0] == self.en_zona:
+            print('saliendo de zona crítica')
+            self.estado[0] = self.sin_accion
+            self.reloj_logico +=1
+            for p in self.cola_zona_1:
+                msg =f'{str(self.mi_id)},ok, 1'
+                self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(p)-1]))
+            self.cola_zona_1 = []
+            self.actualziar_interfaz()
+
+    def salir_de_zona2(self):
+        if self.estado[1] == self.en_zona2:
+            self.estado[1] = self.sin_accion
+            self.reloj_logico +=1
+            for p in self.cola_zona_2:
+                msg =f'{str(self.mi_id)},ok, 2'
+                self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(p)-1]))
+            self.cola_zona_2 = []
+            self.actualziar_interfaz()
+
 
         
     def responderMensajeOk(self,id_proceso, m_zona_pedida, reloj_logico):
@@ -198,11 +221,13 @@ class InterfazGrafica:
                     self.numero_oks_zona1 += 1
                     if self.numero_oks_zona1 >= 6:
                         self.estado[0] = self.en_zona
+                        self.numero_oks_zona1 = 0
                 else:
                     #print(msg_array[2],'en zona 2')
                     self.numero_oks_zona2 += 1
                     if self.numero_oks_zona2 >= 6:
-                            self.estado[1] = self.en_zona2
+                        self.estado[1] = self.en_zona2
+                        self.numero_oks_zona2 = 0
             self.actualziar_interfaz()
 
 
