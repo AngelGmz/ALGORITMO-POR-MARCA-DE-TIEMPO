@@ -100,8 +100,7 @@ class InterfazGrafica:
                 return
         self.estado[0] = self.solicita_zona
         self.lblEstado.config(text=f'{self.estado[0]},{self.estado[1]}')
-        msg =f'{str(self.mi_id)},{self.solicita_zona},{self.reloj_logico},1'
-        self.reloj_logico += 1
+        msg =f'{str(self.mi_id)},{self.solicita_zona},1,{self.reloj_logico}'
         self.enviar_mensaje_a_todos(msg)
         self.actualziar_interfaz()
         
@@ -111,26 +110,24 @@ class InterfazGrafica:
                 return
         self.estado[1] = self.solicita_zona2
         self.lblEstado.config(text=f'{self.estado[0]},{self.estado[1]}')
-        msg =f'{str(self.mi_id)},{self.solicita_zona},{self.reloj_logico},2'
-        self.reloj_logico += 1
+        msg =f'{str(self.mi_id)},{self.solicita_zona},2,{self.reloj_logico}'
         self.enviar_mensaje_a_todos(msg)
         self.actualziar_interfaz()
         
     
     def enviar_mensaje_a_todos(self, msg):
         for i in self.NODOS_ENVIO:
+            self.reloj_logico += 1
             self.sock.sendto(msg.encode(), ('127.0.0.1', i))
 
     
     def salir_de_zona1(self):
-        print('saliendo de zona crítica')
-
         if self.estado[0] == self.en_zona:
             print('saliendo de zona crítica')
             self.estado[0] = self.sin_accion
-            self.reloj_logico +=1
             for p in self.cola_zona_1:
-                msg =f'{str(self.mi_id)},ok, 1'
+                self.reloj_logico +=1
+                msg =f'{str(self.mi_id)},ok, 1, {self.reloj_logico}'
                 self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(p)-1]))
             self.cola_zona_1 = []
             self.actualziar_interfaz()
@@ -138,9 +135,9 @@ class InterfazGrafica:
     def salir_de_zona2(self):
         if self.estado[1] == self.en_zona2:
             self.estado[1] = self.sin_accion
-            self.reloj_logico +=1
             for p in self.cola_zona_2:
-                msg =f'{str(self.mi_id)},ok, 2'
+                self.reloj_logico +=1
+                msg =f'{str(self.mi_id)},ok, 2, {self.reloj_logico}'
                 self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(p)-1]))
             self.cola_zona_2 = []
             self.actualziar_interfaz()
@@ -158,12 +155,12 @@ class InterfazGrafica:
 
                 return
             if self.estado[0] == self.sin_accion:
-                msg =f'{str(self.mi_id)},ok, {m_zona_pedida}'
+                msg =f'{str(self.mi_id)},ok, {m_zona_pedida}, {self.reloj_logico}'
                 self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(id_proceso)]))
                 return
 
             if  int(self.reloj_logico) > int(reloj_logico):
-                msg =f'{str(self.mi_id)},ok, {m_zona_pedida}'
+                msg =f'{str(self.mi_id)},ok, {m_zona_pedida}, {self.reloj_logico}'
                 self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(id_proceso)]))
                 return
             print('encola')
@@ -177,12 +174,12 @@ class InterfazGrafica:
                 self.actualziar_interfaz()
                 return
             if self.estado[1] == self.sin_accion:
-                msg =f'{str(self.mi_id)},ok, {m_zona_pedida}'
+                msg =f'{str(self.mi_id)},ok, {m_zona_pedida}, {self.reloj_logico}'
                 self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(id_proceso)]))
                 return
 
             if  int(self.reloj_logico) > int(reloj_logico):
-                msg =f'{str(self.mi_id)},ok, {m_zona_pedida}'
+                msg =f'{str(self.mi_id)},ok, {m_zona_pedida}, {self.reloj_logico}'
                 self.sock.sendto(msg.encode(), ('127.0.0.1', self.NODOS_ENVIO[int(id_proceso)]))
                 
                 return
@@ -210,8 +207,8 @@ class InterfazGrafica:
             msg_array = msg_rep.split(',')
             if msg_array[1] == self.solicita_zona:
                 m_id_prceso_remitente = msg_array[0]
-                m_reloj_logico = msg_array[2]
-                m_zona_pedida = msg_array[3]
+                m_reloj_logico = msg_array[3]
+                m_zona_pedida = msg_array[2]
                 self.responderMensajeOk(m_id_prceso_remitente, m_zona_pedida, m_reloj_logico)
             
             if msg_array[1] == 'ok':
