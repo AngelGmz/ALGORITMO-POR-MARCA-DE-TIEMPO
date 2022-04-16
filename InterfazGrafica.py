@@ -88,7 +88,7 @@ class InterfazGrafica:
         self.botonZonaCritica2 = Button(master, text="→ Solicitar Zona crítica 2", command=self.solicitar_zona2)
         self.botonZonaCritica2.configure(font=boton)
         self.botonZonaCritica2.pack(padx=20,pady=10)
-        self.SalirSonaCritica = Button(master, text="← Salir de a Zona crítica", command=self.salir_de_zona_actual)
+        self.SalirSonaCritica = Button(master, text="← Salir de a Zona crítica 1", command=self.salir_de_zona_actual)
         self.SalirSonaCritica.configure(font=boton)
         self.SalirSonaCritica.pack(padx=20,pady=10) 
         self.SalirSonaCritica2 = Button(master, text="← Salir de a Zona crítica 2", command=self.salir_de_zona_actual)
@@ -105,7 +105,7 @@ class InterfazGrafica:
         self.enviar_mensaje_a_todos(msg)
 
     def solicitar_zona2(self):
-        if self.estado[1] == self.solicita_zona or self.estado[1] == self.en_zona:
+        if self.estado[1] == self.solicita_zona2 or self.estado[1] == self.en_zona2:
                 return
         self.estado[1] = self.solicita_zona2
         self.lblEstado.config(text=f'{self.estado[0]},{self.estado[1]}')
@@ -141,6 +141,9 @@ class InterfazGrafica:
                 return
             
             print('encola')
+
+        #msg =f'{str(self.mi_id)},{self.solicita_zona},{self.reloj_logico},2'
+
         if m_zona_pedida == '2':
             if self.estado[1] == self.en_zona:
                 print('encola')
